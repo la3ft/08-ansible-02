@@ -37,7 +37,7 @@
       register: create_db
       failed_when: create_db.rc != 0 and create_db.rc !=82
       changed_when: create_db.rc == 0
-- name: Install Vector
+- name: Install Vector on clickhouse
   hosts: clickhouse
   tasks:
     - name: Get vector distrib
@@ -48,4 +48,38 @@
       ansible.builtin.yum:
         name: "./vector.rpm"
         state: present
+- name: Install Vector standalone
+  hosts: vector
+  tasks:
+    - name: Get vector distrib
+      ansible.builtin.get_url:
+        url: "https://packages.timber.io/vector/0.19.0/vector-0.19.0-1.x86_64.rpm"
+        dest: "./vector.rpm"
+    - name: Install vector package
+      ansible.builtin.yum:
+        name: "./vector.rpm"
+        state: present
       notify: Start vector service
+- name: Install lighthouse and Nginx
+  hosts: lighthouse
+  tasks:
+    - name: Install git
+      ansible.builtin.yum:
+        name: git
+        state: latest
+    - block:
+        - name: Get lighthouse
+          ansible.builtin.shell: git clone https://github.com/VKCOM/lighthouse
+      rescue:
+        - name: Already get
+          ansible.builtin.shell: echo OK
+    - name: Install Nginx
+      ansible.builtin.yum:
+        name: nginx
+        state: latest
+    - name: Nginx start
+      ansible.builtin.shell: systemctl start nginx | systemctl enable nginx
+    - name: Copy lighthouse to Nginx
+      ansible.builtin.shell: rm -rf /usr/share/nginx/html/* | cp -r -f lighthouse/* /usr/share/nginx/html
+    - name: Restart Nginx
+      ansible.builtin.shell: service nginx restart
