@@ -1,4 +1,4 @@
-# Playbook для задания 08-ansible-02-playbook
+# Playbook для установки Clickhouse, Vector, Lighthouse
 
 Данный playbook устанавливает:  
 1. Clickhouse, запускает его демон, а также создаёт базу "logs" + Vector и запускает его демон на серверы "clickhouse";
